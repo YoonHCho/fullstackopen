@@ -1,72 +1,70 @@
 import { useState } from 'react'
 
+const Header =({ content }) => (
+  <header>
+    <h2>{content}</h2>
+  </header>
+)
+
 const Button = ({ text, onClick }) => (
-  <button onClick={onClick} >{text}</button>
+  <button onClick={onClick}>{text.charAt(0).toUpperCase() + text.slice(1)}</button>
 )
 
-const Total = ({ text, total }) => (
-  <p>{text}: {total}</p>
-)
-
-const Calculate = ({ text, total, good, bad }) => {
-  if (total === 0) {
-    return <p>{text}: {text === 'Average' ? 0 : `0%`}</p>
-  }
-
-  if (text === 'Average') {
+const Statistics = ({ good, neutral, bad }) => {
+  const total = good + neutral + bad;
+  if (!total) {
     return (
-      <p>{text}: {(good - bad) / total}</p>
+      <p>No Feedback Given</p>
     )
   }
   return (
-    <p>{text}: {good / total}%</p>
+    <table>
+      <tbody>
+        <StatisticLine text="good" value={good} />
+        <StatisticLine text="neutral" value={neutral} />
+        <StatisticLine text="bad" value={bad} />
+        <StatisticLine text="total" value={total} />
+        <StatisticLine text="average" value={(good - bad) / total} />
+        <StatisticLine text="positive" value={good / total} />
+      </tbody>
+    </table>
+  )
+}
+
+const StatisticLine  = ({ text, value }) => {
+  return (
+    <tr>
+      <td>{text.charAt(0).toUpperCase() + text.slice(1)}: </td>
+      <td>{text === "positive" ? `${Number.parseFloat(value * 100).toFixed(1)}%` : text === 'average' ? Number.parseFloat(value).toFixed(1) : value}</td>
+    </tr>
   )
 }
 
 const App = () => {
-  const [ good, setGood ] = useState(0);
-  const [ neutral, setNeutral ] = useState(0);
-  const [ bad, setBad ] = useState(0);
-  const [ total, setTotal ] = useState(0);
+  const [ feedback, setFeedback ] = useState({
+    good: 0,
+    neutral: 0,
+    bad: 0
+  });
 
-  const handleGood = () => {
-    setGood(prev => {
-      const updatedValue = prev + 1;
-      setTotal(updatedValue + neutral + bad)
-      return (updatedValue)
-    });
-  };
+  const { good, neutral, bad } = feedback;
 
-  const handleNeutral = () => {
-    setNeutral(prev => {
-      const updatedValue = prev + 1;
-      setTotal(good + updatedValue + bad)
-      return (updatedValue)
-    });
-  };
-
-  const handleBad = () => {
-    setBad(prev => {
-      const updatedValue = prev + 1;
-      setTotal(good + neutral + updatedValue)
-      return (updatedValue)
-    });
-  };
+  // using 1 function to handle feedback clicks instead of declaring 3 different functions by using the bracket notation
+  const handleClicks = (whichFeedback) => () => {
+    setFeedback(prevFeedback => (
+      { ...prevFeedback, [whichFeedback]: prevFeedback[whichFeedback] + 1 }
+    ))
+  }
 
   return (
     <>
-      <h2>Give Feedback</h2>
-      <Button onClick={handleGood} text="Good" />
-      <Button onClick={handleNeutral} text="Neutral" />
-      <Button onClick={handleBad} text="Bad" />
+      <Header content="Give Feedback" />
+      <Button onClick={handleClicks("good")} text="good" />
+      <Button onClick={handleClicks("neutral")} text="neutral" />
+      <Button onClick={handleClicks("bad")} text="bad" />
 
-      <h2>Statistics</h2>
-      <Total text="Good" total={good} />
-      <Total text="Neutral" total={neutral} />
-      <Total text="Bad" total={bad} />
-      <Total text="All" total={total} />
-      <Calculate text='Average' total={total} good={good} bad={bad} />
-      <Calculate text='Positive' total={total} good={good} bad={bad} />
+      <Header content="Statistics" />
+      <Statistics good={good} neutral={neutral} bad={bad} />
     </>
   )
 }
