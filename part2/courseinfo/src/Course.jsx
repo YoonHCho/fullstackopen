@@ -1,4 +1,4 @@
-const Header = ({ context }) => <h1>{context}</h1>
+const Header = ({ content }) => <h1>{content}</h1>
 
 const Total = ({ parts }) => {
   const total = parts.reduce((acc, curr) => acc + curr.exercises, 0);
@@ -20,7 +20,7 @@ const Content = ({ parts }) => (
 
 const Course = ({ course }) => (
   <>
-    <Header context={course.name} />
+    <Header content={course.name} />
     <Content parts={course.parts} />
     <Total parts={course.parts} />
   </>
