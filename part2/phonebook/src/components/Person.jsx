@@ -1,10 +1,12 @@
-const Person = ({ name, number }) => (
+import Button from "./Button";
+
+const Person = ({ name, number, handleDelete }) => (
   <tr>
     <td>
       {name}
     </td>
     <td>
-      {number}
+      {number} <Button handleDelete={handleDelete} />
     </td>
   </tr>
 )
