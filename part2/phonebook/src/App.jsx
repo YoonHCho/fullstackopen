@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import PersonForm from './components/PersonForm';
 import Filter from './components/Filter';
 import Persons from './components/Persons';
+import Notification from './components/Notification';
 import phoneService from "./services/phonebook"
 
 const App = () => {
@@ -9,6 +10,7 @@ const App = () => {
   const [ newName, setNewName ] = useState('');
   const [ newNumber, setNewNumber ] = useState('');
   const [ filterName, setFilterName ] = useState('');
+  const [ notificationMessage, setNotificationMessage ] = useState(null)
 
   useEffect(() => {
     phoneService.getAll()
@@ -29,19 +31,26 @@ const App = () => {
             setNewName('')
             setNewNumber('')
           })
+          .catch(() => {
+            console.log("found: ", found);
+            setNotificationMessage(`Information on "${newName}" has already been removed from server`);
+            setTimeout(() => {
+              setNotificationMessage(null);
+            }, 5000);
+            setPersons(persons => persons.filter(person => person.id !== found.id));
+          })
       }
       return;
     }
-
-    // if (persons.find(person => person.name.toLowerCase() === newName.toLowerCase())) {
-    //   alert('already exist');
-    //   return
-    // }
 
     const newContact = { name: newName, number: newNumber };
     phoneService.addContact(newContact)
       .then(contact => {
         setPersons([...persons, contact ]);
+        setNotificationMessage(`Added ${contact.name}`);
+        setTimeout(() => {
+          setNotificationMessage(null);
+        }, 3000);
         setNewName('')
         setNewNumber('')
       })
@@ -54,6 +63,12 @@ const App = () => {
       phoneService.deleteContact(id)
         .then(() => {
         setPersons(persons.filter(person => person.id !== id));
+      }).catch(() => {
+        setNotificationMessage(`Information on "${name}" has already been removed from server`);
+        setTimeout(() => {
+          setNotificationMessage(null);
+        }, 5000);
+        setPersons(persons => persons.filter(person => person.id !== id));
       })
     }
   }
@@ -64,6 +79,7 @@ const App = () => {
     <>
       <div>
         <h2>Phonebook</h2>
+        <Notification notificationMessage={notificationMessage} />
         <Filter filterName={filterName} setFilterName={setFilterName} />
 
         <h3>Add a New</h3>

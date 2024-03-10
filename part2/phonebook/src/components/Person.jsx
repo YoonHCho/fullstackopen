@@ -1,14 +1,10 @@
 import Button from "./Button";
 
 const Person = ({ name, number, handleDelete }) => (
-  <tr>
-    <td>
-      {name}
-    </td>
-    <td>
-      {number} <Button handleDelete={handleDelete} />
-    </td>
-  </tr>
+  <li>
+    {name} &nbsp;
+    {number} &nbsp; <Button handleDelete={handleDelete} />
+  </li>
 )
 
 export default Person;
