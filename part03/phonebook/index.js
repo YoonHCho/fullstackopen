@@ -2,6 +2,8 @@ import express from "express";
 /* import { data } from "./data.js";
     tried to use the data by importing (to separate files for data and functionality), however it didn't work. in the data.js file, declared the variable with let, but when attempting to modify it (by using delete method), keep getting TypeError: Assignment to constant variable. It seems that within the file data.js, it is allowed to modify it as it should, however, within the file that imports the data variable, data acts as a reference to the original array, but it is a read-only reference so I cannot directly modify it. This mechanism is to helps prevent accidental modifications of the imported data, promoting a safer development practice.
 */
+// Implementing morgan as a logging tool.
+import morgan from "morgan";
 
 let data = [
   {
@@ -30,6 +32,15 @@ const app = express();
 const PORT = 3000;
 
 app.use(express.json());
+
+// ex 3.7
+app.use(morgan("tiny"));
+
+// ex 3.8: creating my own token, in this case "body" to be used in the custom symbols, :symbol.
+morgan.token("body", (req, res) => JSON.stringify(req.body));
+app.use(morgan(":method :url :status :res[content-length] - :response-time ms :body"));
+
+// app.use(morgan("tiny"));
 
 app.get("/", (request, response) => {
   response.send("<h1>Phonebook Backend</h1>");
