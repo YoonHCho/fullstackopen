@@ -29,6 +29,8 @@ let data = [
 const app = express();
 const PORT = 3000;
 
+app.use(express.json());
+
 app.get("/", (request, response) => {
   response.send("<h1>Phonebook Backend</h1>");
 });
@@ -55,6 +57,33 @@ app.get("/api/persons/:id", (request, response) => {
     return response.status(404).json({ error: `Cannot find info with ID number ${id}` });
   }
   response.status(200).json(person);
+});
+
+const createId = () => {
+  return Math.floor(Math.random() * 10001);
+};
+
+const checkName = nameToCheck => {
+  return data.find(el => el.name.toLowerCase() === nameToCheck.toLowerCase());
+};
+
+app.post("/api/persons", (request, response) => {
+  const { body } = request;
+  if (!body.name || !body.number) {
+    return response.status(404).json({ error: "Need both name and number" });
+  }
+
+  if (checkName(body.name)) {
+    return response.status(409).json({ error: "Name must be unique" });
+  }
+
+  const person = {
+    id: createId(),
+    name: body.name,
+    number: body.number,
+  };
+  data = data.concat(person);
+  response.status(201).json(person);
 });
 
 app.delete("/api/persons/delete/:id", (request, response) => {
