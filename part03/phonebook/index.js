@@ -5,6 +5,9 @@ import express from "express";
 // Implementing morgan as a logging tool.
 import morgan from "morgan";
 
+// Implementing cors to unblock the requests.
+import cors from "cors";
+
 let data = [
   {
     id: 1,
@@ -29,12 +32,15 @@ let data = [
 ];
 
 const app = express();
-const PORT = 3000;
 
+// To allow frontend and backend to communicate securely across different origins
+const PORT = process.env.PORT || 3001;
+app.use(cors());
+app.use(express.static("dist"));
 app.use(express.json());
 
 // ex 3.7
-app.use(morgan("tiny"));
+// app.use(morgan("tiny"));
 
 // ex 3.8: creating my own token, in this case "body" to be used in the custom symbols, :symbol.
 morgan.token("body", (req, res) => JSON.stringify(req.body));
@@ -42,9 +48,10 @@ app.use(morgan(":method :url :status :res[content-length] - :response-time ms :b
 
 // app.use(morgan("tiny"));
 
-app.get("/", (request, response) => {
-  response.send("<h1>Phonebook Backend</h1>");
-});
+// Link with fly.io will give the frontend page from dist directory
+// app.get("/", (request, response) => {
+//   response.send("<h1>Phonebook Backend</h1>");
+// });
 
 app.get("/api/persons", (request, response) => {
   response.status(200).json(data);
