@@ -7,6 +7,8 @@ import morgan from "morgan";
 
 // Implementing cors to unblock the requests.
 import cors from "cors";
+import "dotenv/config";
+import Person from "./models/phonebook.js";
 
 let data = [
   {
@@ -34,7 +36,7 @@ let data = [
 const app = express();
 
 // To allow frontend and backend to communicate securely across different origins
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT;
 app.use(cors());
 app.use(express.static("dist"));
 app.use(express.json());
@@ -54,7 +56,10 @@ app.use(morgan(":method :url :status :res[content-length] - :response-time ms :b
 // });
 
 app.get("/api/persons", (request, response) => {
-  response.status(200).json(data);
+  // response.status(200).json(data);
+  Person.find({}).then(phonebook => {
+    response.status(200).json(phonebook);
+  });
 });
 
 app.get("/info", (request, response) => {
@@ -69,21 +74,35 @@ app.get("/info", (request, response) => {
 });
 
 app.get("/api/persons/:id", (request, response) => {
-  const id = Number(request.params.id);
-  const person = data.find(el => el.id === id);
-  if (!person) {
-    return response.status(404).json({ error: `Cannot find info with ID number ${id}` });
-  }
-  response.status(200).json(person);
+  Person.findById(request.params.id)
+    .then(returnedPerson => {
+      if (returnedPerson) {
+        response.status(200).json(returnedPerson);
+      } else {
+        // if no id matches even with mongo identifier format
+        response.status(404).json({ error: `Cannot find info with ID number ${request.params.id}` });
+      }
+    })
+    .catch(error => {
+      // will trigger if id doesn't match Mongo identifier format
+      return response.status(500).json({ error: `${error}` });
+    });
+  // const id = Number(request.params.id);
+  // const person = data.find(el => el.id === id);
+  // if (!person) {
+  //   return response.status(404).json({ error: `Cannot find info with ID number ${id}` });
+  // }
+  // response.status(200).json(person);
 });
 
 const createId = () => {
   return Math.floor(Math.random() * 10001);
 };
 
-const checkName = nameToCheck => {
-  return data.find(el => el.name.toLowerCase() === nameToCheck.toLowerCase());
-};
+// ignore whether there is already a person in the database for now, per ex.3.14
+// const checkName = nameToCheck => {
+//   return data.find(el => el.name.toLowerCase() === nameToCheck.toLowerCase());
+// };
 
 app.post("/api/persons", (request, response) => {
   const { body } = request;
@@ -91,17 +110,27 @@ app.post("/api/persons", (request, response) => {
     return response.status(404).json({ error: "Need both name and number" });
   }
 
-  if (checkName(body.name)) {
-    return response.status(409).json({ error: "Name must be unique" });
-  }
+  // ignore whether there is already a person in the database for now, per ex.3.14
+  // if (checkName(body.name)) {
+  //   return response.status(409).json({ error: "Name must be unique" });
+  // }
 
-  const person = {
-    id: createId(),
+  const person = new Person({
     name: body.name,
     number: body.number,
-  };
-  data = data.concat(person);
-  response.status(201).json(person);
+  });
+
+  person.save().then(person => {
+    response.status(201).json(person);
+  });
+
+  // const person = {
+  //   id: createId(),
+  //   name: body.name,
+  //   number: body.number,
+  // };
+  // data = data.concat(person);
+  // response.status(201).json(person);
 });
 
 app.delete("/api/persons/delete/:id", (request, response) => {
