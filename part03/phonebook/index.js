@@ -10,33 +10,35 @@ import cors from "cors";
 import "dotenv/config";
 import Person from "./models/phonebook.js";
 
-let data = [
-  {
-    id: 1,
-    name: "Arto Hellas",
-    number: "040-123456",
-  },
-  {
-    id: 2,
-    name: "Ada Lovelace",
-    number: "39-44-5323523",
-  },
-  {
-    id: 3,
-    name: "Dan Abramov",
-    number: "12-43-234345",
-  },
-  {
-    id: 4,
-    name: "Mary Poppendieck",
-    number: "39-23-6423122",
-  },
-];
+let data;
+// in case need below for something else
+// let data = [
+//   {
+//     id: 1,
+//     name: "Arto Hellas",
+//     number: "040-123456",
+//   },
+//   {
+//     id: 2,
+//     name: "Ada Lovelace",
+//     number: "39-44-5323523",
+//   },
+//   {
+//     id: 3,
+//     name: "Dan Abramov",
+//     number: "12-43-234345",
+//   },
+//   {
+//     id: 4,
+//     name: "Mary Poppendieck",
+//     number: "39-23-6423122",
+//   },
+// ];
 
 const app = express();
+const PORT = process.env.PORT;
 
 // To allow frontend and backend to communicate securely across different origins
-const PORT = process.env.PORT;
 app.use(cors());
 app.use(express.static("dist"));
 app.use(express.json());
@@ -48,56 +50,59 @@ app.use(express.json());
 morgan.token("body", (req, res) => JSON.stringify(req.body));
 app.use(morgan(":method :url :status :res[content-length] - :response-time ms :body"));
 
-// app.use(morgan("tiny"));
+// function for unknown endpoints, these errors will use the middleware and will be called when there are no accessible endpoints, but needs to be at the end of the file
+const unknownEndpoint = (request, response) => {
+  response.status(404).send({ error: "Unknown endpoint" });
+};
+// function for error handling
+const errorHandler = (error, request, response, next) => {
+  console.log(error.message);
 
-// Link with fly.io will give the frontend page from dist directory
-// app.get("/", (request, response) => {
-//   response.send("<h1>Phonebook Backend</h1>");
-// });
+  if (error.name === "CastError") {
+    return response.status(400).send({ error: "Malformatted ID" });
+  }
+
+  next(error);
+};
+
+app.get("/", (request, response) => {
+  response.send("<h1>Phonebook Backend</h1>");
+});
 
 app.get("/api/persons", (request, response) => {
-  // response.status(200).json(data);
   Person.find({}).then(phonebook => {
     response.status(200).json(phonebook);
   });
 });
 
-app.get("/info", (request, response) => {
+app.get("/info", (request, response, error) => {
   const date = new Date();
-  const length = data.length;
-  response.status(200).send(`
-    <div>
-    <p>Phonebook has info for ${length} people</p>
-    <p>${date}</p>
-    </div>
-  `);
+  Person.countDocuments({})
+    .then(count => {
+      response.status(200).send(`
+        <div>
+          <p>Phonebook has info for ${count} people</p>
+          <p>${date}</p>
+        </div>
+      `);
+    })
+    .catch(error => next(error));
 });
 
-app.get("/api/persons/:id", (request, response) => {
+app.get("/api/persons/:id", (request, response, next) => {
   Person.findById(request.params.id)
     .then(returnedPerson => {
       if (returnedPerson) {
         response.status(200).json(returnedPerson);
       } else {
-        // if no id matches even with mongo identifier format
+        console.log("error message:", error.message);
         response.status(404).json({ error: `Cannot find info with ID number ${request.params.id}` });
       }
     })
     .catch(error => {
-      // will trigger if id doesn't match Mongo identifier format
-      return response.status(500).json({ error: `${error}` });
+      next(error);
     });
-  // const id = Number(request.params.id);
-  // const person = data.find(el => el.id === id);
-  // if (!person) {
-  //   return response.status(404).json({ error: `Cannot find info with ID number ${id}` });
-  // }
-  // response.status(200).json(person);
 });
-
-const createId = () => {
-  return Math.floor(Math.random() * 10001);
-};
 
 // ignore whether there is already a person in the database for now, per ex.3.14
 // const checkName = nameToCheck => {
@@ -123,24 +128,52 @@ app.post("/api/persons", (request, response) => {
   person.save().then(person => {
     response.status(201).json(person);
   });
-
-  // const person = {
-  //   id: createId(),
-  //   name: body.name,
-  //   number: body.number,
-  // };
-  // data = data.concat(person);
-  // response.status(201).json(person);
 });
 
-app.delete("/api/persons/delete/:id", (request, response) => {
-  const id = Number(request.params.id);
-  const newPersons = data.filter(el => el.id !== id);
-  if (newPersons.length === data.length) {
-    return response.status(404).json({ error: "something went wrong and couldn't complete delete" });
+app.delete("/api/persons/:id", (request, response, next) => {
+  Person.findByIdAndDelete(request.params.id)
+    .then(() => {
+      response.status(204).end();
+    })
+    .catch(error => next(error));
+});
+
+app.put("/api/persons/:id", (request, response, next) => {
+  const { name, number } = request.body;
+  if (!name || !number) {
+    return response.status(400).json({ error: `Both Name and Number are required` });
   }
-  data = newPersons;
-  response.status(200).json({ statusMessage: `ID number ${id} deleted successfully` });
+
+  // first param is to find the document matching name, and second argument is the update operation: update number, third to tell mongoose to return the modified document
+  // regex to apply case-insensitive search
+  Person.findOneAndUpdate({ name: { $regex: "^" + name + "$", $options: "i" } }, { number }, { new: true })
+    .then(updatedPerson => {
+      if (updatedPerson) {
+        response.status(200).json(updatedPerson);
+      } else {
+        response.status(404).json({ error: `Cannot find contact ID ${id}` }); // or status(204).end()
+      }
+    })
+    .catch(error => next(error));
+
+  // below is finding by id, and not by name.
+  // const { id } = request.params;
+  // const person = {
+  //   name,
+  //   number,
+  // };
+  // Person.findByIdAndUpdate(id, person, { new: true })
+  //   .then(updatedPerson => {
+  //     if (updatedPerson) {
+  //       response.status(200).json(updatedPerson);
+  //     } else {
+  //       response.status(404).json({ error: `Cannot find contact ID ${id}` }); // or status(204).end()
+  //     }
+  //   })
+  //   .catch(error => next(error));
 });
+
+app.use(unknownEndpoint);
+app.use(errorHandler);
 
 app.listen(PORT, () => console.log(`Server running on port: ${PORT}`));
