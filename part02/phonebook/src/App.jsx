@@ -31,8 +31,8 @@ const App = () => {
             setNewName('')
             setNewNumber('')
           })
-          .catch(() => {
-            console.log("found: ", found);
+          .catch(error => {
+            console.log("ERROR FOR ALREADY REMOVED:", error);
             setNotificationMessage(`Information on "${newName}" has already been removed from server`);
             setTimeout(() => {
               setNotificationMessage(null);
@@ -53,6 +53,13 @@ const App = () => {
         }, 3000);
         setNewName('')
         setNewNumber('')
+      })
+      .catch(error => {
+        console.log(error);
+        setNotificationMessage(error.response.data.error);
+        setTimeout(() => {
+          setNotificationMessage(null);
+        }, 3000);
       })
   }
 
