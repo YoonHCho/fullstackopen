@@ -56,11 +56,18 @@ const unknownEndpoint = (request, response) => {
 };
 // function for error handling
 const errorHandler = (error, request, response, next) => {
-  console.log(error.message);
+  // console.log("ErrorHandler error: ", error);
 
   if (error.name === "CastError") {
     return response.status(400).send({ error: "Malformatted ID" });
+  } else if (error.name === "ValidationError") {
+    return response.status(400).send({ error: error.message });
   }
+  // else if (error.name === "Person validation failed") {
+  //   return response
+  //     .status(400)
+  //     .send({ error: "Person validation failed: name: Path `name` (`df`) is shorter than the minimum allowed length (3)." });
+  // }
 
   next(error);
 };
@@ -95,7 +102,6 @@ app.get("/api/persons/:id", (request, response, next) => {
       if (returnedPerson) {
         response.status(200).json(returnedPerson);
       } else {
-        console.log("error message:", error.message);
         response.status(404).json({ error: `Cannot find info with ID number ${request.params.id}` });
       }
     })
@@ -109,11 +115,13 @@ app.get("/api/persons/:id", (request, response, next) => {
 //   return data.find(el => el.name.toLowerCase() === nameToCheck.toLowerCase());
 // };
 
-app.post("/api/persons", (request, response) => {
-  const { body } = request;
-  if (!body.name || !body.number) {
-    return response.status(404).json({ error: "Need both name and number" });
-  }
+app.post("/api/persons", (request, response, next) => {
+  const { name, number } = request.body;
+  // if (!body.name || !body.number) {
+  //   return response.status(400).json({ error: "Need both name and number" });
+  // } else if (body.name.length < 3) {
+  //   return response.status(400).json({ error: "Name has to be longer then 3 characters" });
+  // }
 
   // ignore whether there is already a person in the database for now, per ex.3.14
   // if (checkName(body.name)) {
@@ -121,13 +129,19 @@ app.post("/api/persons", (request, response) => {
   // }
 
   const person = new Person({
-    name: body.name,
-    number: body.number,
+    name,
+    number,
   });
 
-  person.save().then(person => {
-    response.status(201).json(person);
-  });
+  person
+    .save()
+    .then(person => {
+      response.status(201).json(person);
+    })
+    .catch(error => {
+      // console.log(error.message);
+      next(error);
+    });
 });
 
 app.delete("/api/persons/:id", (request, response, next) => {

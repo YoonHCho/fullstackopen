@@ -7,6 +7,8 @@ const getAll = () => {
   return response.then(response => response.data);
 };
 
+// don't need .catch because when error is returned from backend, axios will automatically reject the promise returned by axios.post and in frontend,
+// the control flow will skip the then() block and jump directly to the .catch() block. Could still add .catch(error => {\n throw error }) if wanted to.
 const addContact = newObject => {
   const response = axios.post(baseUrl, newObject);
   return response.then(response => response.data);
