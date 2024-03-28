@@ -5,10 +5,16 @@ GET http://localhost:3001/api/persons
 GET http://localhost:3001/info
 
 ###
-GET http://localhost:3001/api/persons/660329376de4bdb150fd628c
+GET http://localhost:3001/api/persons/66032aee5986a455d779dc67
+
+### Error getting ID, mongo identifier format
+GET http://localhost:3001/api/persons/5c41c90e84d891c15dfa3431
+
+### Error getting ID, not mongo identifier format
+GET http://localhost:3001/api/persons/5c41c90e84d891c15dfa34311
 
 ###
-DELETE http://localhost:3001/api/persons/delete/660329076de4bdb150fd6289
+DELETE http://localhost:3001/api/persons/660329076de4bdb150fd6289
 
 ###
 POST http://localhost:3001/api/persons/
@@ -17,4 +23,13 @@ Content-Type: application/json
 {
   "name": "Homer Simpson",
   "number": "213243123"
+}
+
+###
+PUT http://localhost:3001/api/persons/6603a0ab8d7b5a1eb34c34c9
+Content-Type: application/json
+
+{
+  "name": "Lisa Simpson",
+  "number": "4444444"
 }
