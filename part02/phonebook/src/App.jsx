@@ -50,7 +50,7 @@ const App = () => {
         setNotificationMessage(`Added ${contact.name}`);
         setTimeout(() => {
           setNotificationMessage(null);
-        }, 3000);
+        }, 5000);
         setNewName('')
         setNewNumber('')
       })
@@ -59,7 +59,7 @@ const App = () => {
         setNotificationMessage(error.response.data.error);
         setTimeout(() => {
           setNotificationMessage(null);
-        }, 3000);
+        }, 5000);
       })
   }
 

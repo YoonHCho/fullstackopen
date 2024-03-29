@@ -152,15 +152,24 @@ app.delete("/api/persons/:id", (request, response, next) => {
     .catch(error => next(error));
 });
 
-app.put("/api/persons/:id", (request, response, next) => {
+app.put("/api/persons/", (request, response, next) => {
   const { name, number } = request.body;
-  if (!name || !number) {
-    return response.status(400).json({ error: `Both Name and Number are required` });
-  }
+  // if (!name || !number) {
+  //   return response.status(400).json({ error: `Both Name and Number are required` });
+  // }
 
   // first param is to find the document matching name, and second argument is the update operation: update number, third to tell mongoose to return the modified document
   // regex to apply case-insensitive search
-  Person.findOneAndUpdate({ name: { $regex: "^" + name + "$", $options: "i" } }, { number }, { new: true })
+  Person.findOneAndUpdate(
+    {
+      name: {
+        $regex: "^" + name + "$",
+        $options: "i",
+      },
+    },
+    { number },
+    { new: true, runValidators: true, context: "query" }
+  )
     .then(updatedPerson => {
       if (updatedPerson) {
         response.status(200).json(updatedPerson);
