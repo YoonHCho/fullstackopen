@@ -10,6 +10,7 @@ import cors from "cors";
 import "dotenv/config";
 import Person from "./models/phonebook.js";
 
+// eslint-disable-next-line no-unused-vars
 let data;
 // in case need below for something else
 // let data = [
@@ -47,6 +48,7 @@ app.use(express.json());
 // app.use(morgan("tiny"));
 
 // ex 3.8: creating my own token, in this case "body" to be used in the custom symbols, :symbol.
+// eslint-disable-next-line no-unused-vars
 morgan.token("body", (req, res) => JSON.stringify(req.body));
 app.use(morgan(":method :url :status :res[content-length] - :response-time ms :body"));
 
@@ -82,7 +84,7 @@ app.get("/api/persons", (request, response) => {
   });
 });
 
-app.get("/info", (request, response, error) => {
+app.get("/info", (request, response, next) => {
   const date = new Date();
   Person.countDocuments({})
     .then(count => {
@@ -159,7 +161,7 @@ app.put("/api/persons/", (request, response, next) => {
   // }
 
   // first param is to find the document matching name, and second argument is the update operation: update number, third to tell mongoose to return the modified document
-  // regex to apply case-insensitive search
+  // regex to apply case-insensitive search. As for the third argument added validation
   Person.findOneAndUpdate(
     {
       name: {
@@ -174,7 +176,7 @@ app.put("/api/persons/", (request, response, next) => {
       if (updatedPerson) {
         response.status(200).json(updatedPerson);
       } else {
-        response.status(404).json({ error: `Cannot find contact ID ${id}` }); // or status(204).end()
+        response.status(404).json({ error: `Cannot find contact name ${name}` }); // or status(204).end()
       }
     })
     .catch(error => next(error));

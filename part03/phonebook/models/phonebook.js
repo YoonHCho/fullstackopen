@@ -42,9 +42,9 @@ const validateSecond = number => {
 };
 // Adding multi validators with custom error message when validator fails
 const customMultiValidator = [
-  { validator: validateHypen, message: `Must have one -` },
-  { validator: validateFirst, message: `First part can only have 2 or 3 digits` },
-  { validator: validateSecond, message: `Total number of digits needs to be at least 8 digits` },
+  { validator: validateHypen, message: "Must have one -" },
+  { validator: validateFirst, message: "First part can only have 2 or 3 digits" },
+  { validator: validateSecond, message: "Total number of digits needs to be at least 8 digits" },
 ];
 
 const phonebookSchema = new mongoose.Schema(
