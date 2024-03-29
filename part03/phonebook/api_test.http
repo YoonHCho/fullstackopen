@@ -22,7 +22,7 @@ Content-Type: application/json
 
 {
   "name": "Homer Simpson",
-  "number": "213243123"
+  "number": "123-123123"
 }
 
 ###
@@ -30,6 +30,6 @@ PUT http://localhost:3001/api/persons/
 Content-Type: application/json
 
 {
-  "name": "Lisa Simpson",
-  "number": "4444444"
+  "name": "Bart Simpson",
+  "number": "223-1123123"
 }

@@ -33,11 +33,10 @@ const App = () => {
           })
           .catch(error => {
             console.log("ERROR FOR ALREADY REMOVED:", error);
-            setNotificationMessage(`Information on "${newName}" has already been removed from server`);
+            setNotificationMessage(error.response.data.error);
             setTimeout(() => {
               setNotificationMessage(null);
             }, 5000);
-            setPersons(persons => persons.filter(person => person.id !== found.id));
           })
       }
       return;

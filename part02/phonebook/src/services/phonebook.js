@@ -24,7 +24,7 @@ const deleteContact = id => {
 };
 
 const updateContact = (id, newObject) => {
-  const response = axios.put(`${baseUrl}/${id}`, newObject);
+  const response = axios.put(`${baseUrl}`, newObject);
   return response
     .then(response => response.data)
     .catch(error => {
